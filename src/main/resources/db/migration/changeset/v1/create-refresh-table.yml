@@ -1,0 +1,71 @@
+databaseChangeLog:
+  - changeSet:
+      id: v1-create-refresh-tokens-table
+      author: anton
+      comment: Создание таблицы refresh_tokens для хранения refresh-токенов
+      changes:
+        - createTable:
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    unique: true
+                    nullable: false
+                    primaryKeyName: pk_refresh_tokens
+              - column:
+                  name: token
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+                  remarks: "JWT refresh token (long string)"
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Дата создания токена"
+              - column:
+                  name: expired_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+                  remarks: "Срок действия токена"
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_refresh_tokens_user
+                    referencedColumnNames: id
+                    referencedTableName: users
+                  remarks: "Ссылка на пользователя"
+
+  - changeSet:
+      id: v1-add-index-on-refresh-token-token
+      author: anton
+      comment: Добавление уникального индекса на поле token для быстрого поиска
+      changes:
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_tokens_token
+            unique: true
+            columns:
+              - column:
+                  name: token
+
+  - changeSet:
+      id: v1-add-index-on-refresh-token-expired-date
+      author: anton
+      comment: Индекс по expired_date для очистки просроченных токенов
+      changes:
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_tokens_expired_date
+            columns:
+              - column:
+                  name: expired_date

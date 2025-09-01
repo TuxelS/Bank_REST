@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: v1_create-users-table
+      author: anton
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: pk_users
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: v1-add-users-foreign-key
+      author: anton
+      changes:
+        - addForeignKeyConstraint:
+            constraintName: fk_users_role
+            baseTableName: users
+            baseColumnNames: role_id
+            referencedTableName: roles
+            referencedColumnNames: id
+            onDelete: NO ACTION
+            onUpdate: NO ACTION
+
+  - changeSet:
+      id: v1-load-users-data
+      author: abelov
+      changes:
+        - sqlFile:
+            path: "classpath:db/migration/data/initial-users.sql"
+            stripComments: true
+            splitStatements: true
+            endDelimiter: ;

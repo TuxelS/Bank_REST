@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/migration/changeset/v1/create-role-table.yml
+  - include:
+      file: db/migration/changeset/v1/create-user-table.yml
+  - include:
+      file: db/migration/changeset/v1/create-refresh-table.yml
