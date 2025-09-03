@@ -35,3 +35,7 @@ app:
       secure: false #для девелопа, для прода - true(т.к. https)
       same-site: Strict
       path: /api/refresh
+
+card:
+  secret-key: 9906f00cfce9cf9b95f20d2f4dfcaad140a74f76a80c366c73c3a357271016bd
+  algorithm: AES

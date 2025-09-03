@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/migration/changeset/v1/create-user-table.yml
   - include:
       file: db/migration/changeset/v1/create-refresh-table.yml
+  - include:
+      file: db/migration/changeset/v1/create-card-table.yml
