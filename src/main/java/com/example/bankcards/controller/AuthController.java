@@ -6,8 +6,9 @@ import com.example.bankcards.dto.RegistrationUserDTO;
 import com.example.bankcards.entity.RefreshToken;
 import com.example.bankcards.exception.ApplicationError;
 import com.example.bankcards.exception.UserExistsException;
+import com.example.bankcards.security.UserDetailsServiceImpl;
 import com.example.bankcards.service.RefreshTokenService;
-import com.example.bankcards.security.UserService;
+import com.example.bankcards.service.UserService;
 import com.example.bankcards.util.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +28,9 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/auth")
 public class AuthController {
+    private final UserDetailsServiceImpl userDetailsServiceImpl;
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenUtils jwtTokenUtils;
@@ -54,7 +57,9 @@ public class AuthController {
             return new ResponseEntity<>(new ApplicationError(HttpStatus.UNAUTHORIZED.value(),
                     "Неправильный логин или пароль"), HttpStatus.UNAUTHORIZED);
         }
-        UserDetails userDetails = userService.loadUserByUsername(jwtRequestDTO.getUsername());
+        try {
+        // ПОПЫТКА получить UserDetails - выбросит DisabledException если заблокирован
+        UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(jwtRequestDTO.getUsername());
         String accessToken = jwtTokenUtils.generateAccessToken(userDetails);
         String refreshToken = jwtTokenUtils.generateRefreshToken(userDetails);
 
@@ -64,6 +69,10 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, addRefreshTokenToCookie(refreshToken).toString())
                 .body(new JwtResponseDTO(accessToken));
+        } catch (DisabledException e) {
+            return new ResponseEntity<>(new ApplicationError(HttpStatus.FORBIDDEN.value(),
+                    "Аккаунт заблокирован"), HttpStatus.FORBIDDEN);
+        }
     }
 
     @PostMapping("/refresh")
@@ -80,7 +89,7 @@ public class AuthController {
             }
 
             String username = jwtTokenUtils.getUsernameFromRefreshToken(refreshToken);
-            UserDetails userDetails = userService.loadUserByUsername(username);
+            UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(username);
             if (userDetails == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(new ApplicationError(HttpStatus.UNAUTHORIZED.value(), "User not found"));
@@ -117,10 +126,7 @@ public class AuthController {
             return ResponseEntity.badRequest()
                     .body(e.getMessage());
         }
-
-
     }
-
     private ResponseCookie addRefreshTokenToCookie(String token) {
         return ResponseCookie.from("refreshToken", token)
                 .httpOnly(true)

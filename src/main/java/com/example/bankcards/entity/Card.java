@@ -23,12 +23,13 @@ public class Card {
     private Long id;
     @Column(nullable = false)
     private String cardNumberEncrypted;
-
+    @Column(nullable = false)
+    private String lastFourSymbols;
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
     @Column(nullable = false)
-    private LocalDate expirationDate;
+    private LocalDate expirationDate = LocalDate.now().plusYears(5);
     @Column(nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
 

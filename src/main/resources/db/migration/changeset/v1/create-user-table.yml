@@ -52,3 +52,16 @@ databaseChangeLog:
             stripComments: true
             splitStatements: true
             endDelimiter: ;
+  - changeSet:
+      id: v1-add-column-active-status
+      author: abelov
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+                  defaultValue: true
+                  constraints:
+                    nullable: false

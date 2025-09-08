@@ -1,5 +1,6 @@
 package com.example.bankcards.util;
 
+import com.example.bankcards.exception.DecryptionException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -10,11 +11,14 @@ import java.util.Base64;
 
 @Component
 public class CardEncryptor {
-    @Value("card.secret-key")
+    @Value("${card.secret-key}")
     private String secretKeyCard;
 
-    @Value("card.algorithm")
+    @Value("${card.algorithm}")
     private String algorithm;
+
+    @Value("${card.unmasked-symbols}")
+    private Integer unmaskedCountOfSymbols;
 
     public String encrypt(String cardNumber) throws Exception {
         // спец объект - в итоге секретный ключ для шифрования
@@ -29,12 +33,21 @@ public class CardEncryptor {
         return Base64.getEncoder().encodeToString(encryptedBytes);
     }
 
-    public String decrypt(String encryptedCard) throws Exception {
-        SecretKeySpec key = new SecretKeySpec(secretKeyCard.getBytes(StandardCharsets.UTF_8), algorithm);
-        Cipher cipher = Cipher.getInstance(algorithm);
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        byte[] decodedBytes = Base64.getDecoder().decode(encryptedCard);
-        byte[] decryptedBytes = cipher.doFinal(decodedBytes);
-        return new String(decryptedBytes, StandardCharsets.UTF_8);
+    public String decrypt(String encryptedCard) {
+        try {
+            SecretKeySpec key = new SecretKeySpec(secretKeyCard.getBytes(StandardCharsets.UTF_8), algorithm);
+            Cipher cipher = Cipher.getInstance(algorithm);
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            byte[] decodedBytes = Base64.getDecoder().decode(encryptedCard);
+            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new DecryptionException("Failed to decrypt card number", e);
+        }
+
+    }
+
+    public String toMaskCardNumber(String cardNumber) {
+        return "**** **** **** " + cardNumber.substring(cardNumber.length() - unmaskedCountOfSymbols);
     }
 }

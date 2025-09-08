@@ -9,6 +9,7 @@ databaseChangeLog:
               - column:
                   name: id
                   type: BIGINT
+                  autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
@@ -65,3 +66,15 @@ databaseChangeLog:
             columns:
               - column:
                   name: expiration_date
+  - changeSet:
+      id: add-last-four-symbols-to-cards
+      author: abelov
+      changes:
+        - addColumn:
+            tableName: cards
+            columns:
+              - column:
+                  name: last_four_symbols
+                  type: varchar(4)
+                  constraints:
+                    nullable: false

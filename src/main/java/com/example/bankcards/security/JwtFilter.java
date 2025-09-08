@@ -1,5 +1,7 @@
 package com.example.bankcards.security;
 
+import com.example.bankcards.entity.User;
+import com.example.bankcards.service.UserService;
 import com.example.bankcards.util.JwtTokenUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -9,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +26,9 @@ import java.util.List;
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtTokenUtils jwtTokenUtils;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final UserService userService;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -33,6 +39,9 @@ public class JwtFilter extends OncePerRequestFilter {
             jwt = authHeader.substring(7);
             try {
                 username = jwtTokenUtils.getUsername(jwt);
+                if (!userService.userIsActive(username)) {
+                    throw new DisabledException("User's account is blocked");
+                }
             } catch (ExpiredJwtException e){
                 log.debug("token lifetime expired");
             } catch (SignatureException e) {
@@ -55,4 +64,5 @@ public class JwtFilter extends OncePerRequestFilter {
         String role = jwtTokenUtils.getRole(jwt);
         return List.of(new SimpleGrantedAuthority(role));
     }
+
 }

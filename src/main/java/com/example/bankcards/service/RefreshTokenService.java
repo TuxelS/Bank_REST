@@ -1,6 +1,5 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.security.UserService;
 import com.example.bankcards.entity.RefreshToken;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.repository.RefreshTokenRepository;
@@ -31,7 +30,6 @@ public class RefreshTokenService {
         refreshTokenObject.setCreatedAt(issuedAt);
         refreshTokenObject.setExpiredDate(expirationDate);
         refreshTokenRepository.save(refreshTokenObject);
-
     }
 
     public Optional<RefreshToken> findByToken(String refreshToken) {
